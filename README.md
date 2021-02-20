@@ -1,7 +1,5 @@
 # Running Spring Boot + GraalVM native images on Azure Functions
 
-TEST
-
 This sample application shows how to:
 
 - Compile a Spring Boot application using GraalVM
