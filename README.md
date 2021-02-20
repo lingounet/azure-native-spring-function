@@ -17,17 +17,6 @@ This will use GitHub Actions to do all the heavy work: as we are creating a nati
 
 To check if Azure is correctly set up, login using the CLI by running `az login`.
 
-## [Optional] GitHub Codespaces support
-
-You can open this project directly using [GitHub Codespaces](https://github.com/features/codespaces).
-
-This uses the [jdubois-codespaces Docker image](https://github.com/jdubois/jdubois-codespaces) and will install GraalVM automatically in a post-installation script.
-
-Within this environment, you will be able to:
-
-- Build the application natively using GraalVM, by running `./build.sh`. The executable file will be in the `target/function` directory.
-- Build and run the application using the JVM, either by running it directly from Visual Studio Code, or by running `./mvnw spring-boot:run`.
-
 ## Fork this repository
 
 All compilation and deployment will be done using GitHub Actions, so you need your own repository for this.
@@ -54,7 +43,7 @@ In order not to type those values again, you can store them in a `.env` file at 
 - This `.env` file will be ignored by Git (so it will remain on your local machine and won't be shared).
 - You will be able to configure those environment variables by running `source .env`.
 
-Go to the `src/main/terraform` directory and run:
+Go to the `terraform` directory and run:
 
 - `terraform init` to initialize your Terraform environment
 - `terraform apply --auto-approve` to create all the necessary Azure resources
@@ -87,11 +76,10 @@ The `AZURE_CREDENTIALS` will allow the GitHub Actions workflow to log in your Az
 This is a JSON payload that we will get by executing the following command:
 
 ```bash
-az ad sp create-for-rbac --name http://$TF_VAR_AZ_FUNCTION_NAME_APP --role contributor --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/$TF_VAR_AZ_RESOURCE_GROUP --sdk-auth
+RESOURCE_ID=$(az group show --name $TF_VAR_AZ_RESOURCE_GROUP --query id -o tsv)
+SPNAME="sp-$(az functionapp list --resource-group $TF_VAR_AZ_RESOURCE_GROUP  --query '[].name' -o tsv)"
+az ad sp create-for-rbac --name "${SPNAME}" --role contributor --scopes "$RESOURCE_ID" --sdk-auth
 ```
-
-- Replace `<SUBSCRIPTION_ID>` by your Azure subscription ID. To get this ID, you can run `az account show` and copy the value of the `id` attribute.
-- This command uses 2 environment variables set we set up earlier for Terraform, the name of your Azure Functions application and the name of your resource group.
 
 Create a new secret called `AZURE_CREDENTIALS`, paste the JSON payload in it, and click "Add secret".
 
